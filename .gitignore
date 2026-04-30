@@ -1,0 +1,111 @@
+# # Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+pythonenv*
+
+# # Virtual Environment (ваша папка venv)
+venv/
+venv_*/
+.venv/
+.virtualenv/
+
+# # IDE и редакторы
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# # Файлы проектов
+*.pyproject
+.project
+.classpath
+
+# # Логи и базы данных
+*.log
+*.pot
+*.pid
+*.seed
+*.sqlite
+*.db
+
+# # Секреты и конфигурация
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+config.py  # если в нем есть секреты (у вас settings читает из .env, так что лучше исключить сам .env)
+credentials.json
+*.pem
+*.key
+
+# # Файлы миграций (если будете использовать Alembic, но миграции нужно коммитить)
+# migrations/versions/*.py  !!! Оставьте закомментированным, миграции нужно коммитить
+
+# # Alembic (только временные файлы)
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# # Файлы отчетов и тестов
+.coverage
+.tox
+noxfile.py
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage.*
+.coveragerc
+
+# # Jupyter Notebook
+.ipynb_checkpoints/
+
+# # Файлы пакетов
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib64/
+man/
+
+# # Railway (файлы деплоя)
+.railway/
+
+# # Файлы голосовых сообщений (если бот сохраняет их локально)
+media/
+voices/
+audio/
+temp_*.ogg
+voice_*.mp3
+
+# # Докер
+docker-compose.override.yml
+.dockerignore
+
+# # Другое
+*.bak
+*.tmp
+*.temp
+.cache/

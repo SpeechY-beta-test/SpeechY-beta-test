@@ -1,0 +1,6 @@
+from routers.FilterRouter import filter_router
+from routers.ProfileRouter import profile_router
+from routers.RegisterRouter import register_router
+from routers.TaskRouter import task_router
+
+routers = [profile_router, register_router, task_router, filter_router]  #filter_router всегда идет последним

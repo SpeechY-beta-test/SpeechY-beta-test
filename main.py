@@ -92,7 +92,6 @@ async def main():
     dp.include_routers(*routers)
 
     try:
-        message_scheduler.start()
         async with await db.get_session() as session:
             from database.repositories.NotificationRepository import NotificationRepository
 

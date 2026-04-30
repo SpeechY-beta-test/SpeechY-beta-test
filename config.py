@@ -26,8 +26,8 @@ class Settings(BaseSettings):
         app_logger.debug(f"Подключение к БД: {self.DB_USER}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}")
 
     def get_database_url(self) -> str:
-        if self.DATABASE_URL:
-            return self.DATABASE_URL
+        if "postgresql://" in self.DATABASE_URL and "+asyncpg" not in self.DATABASE_URL:
+            return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
         url = f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         print(f"URL для подключения: {url}")  # временно для отладки
         return url

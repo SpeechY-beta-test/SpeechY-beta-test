@@ -11,6 +11,7 @@ from database.repositories.ProgressRepository import ProgressRepository
 from database.repositories.UserRepository import UserRepository
 from keyboards.ProfileKeyboards import profile_keyboard
 from keyboards.RegisterKeyboards import get_skip_notifications_keyboard
+from logger_config import app_logger
 from services.Scheduler import message_scheduler
 from states.UserStates import UserStates
 from utils.ProfileUtils import ProfileUtils
@@ -134,13 +135,17 @@ async def customization_notifications_handler(
     try:
 
         notifications_times = UserUtils.validate_user_notifications(message.text)
+        app_logger.info(f"Получены времена уведомлений: {notifications_times}")
+
         if notifications_times:
             message_scheduler.remove_all_user_notifications(message.from_user.id)
             await notification_repo.clear_all_user_notifications(user.id)
             for time in notifications_times:
                 notification = await notification_repo.add_notification_from_string(message.from_user.id, time)
+                app_logger.info(f"Уведомление в БД: id={notification.id if notification else None}")
                 if notification:
                     hour, minute = map(int, time.split(':'))
+                    app_logger.info(f"Планируем уведомление для {message.from_user.id} на {hour}:{minute}")
                     message_scheduler.scheduler_daily_notification(
                         bot=message.bot,
                         telegram_id=message.from_user.id,
@@ -148,6 +153,7 @@ async def customization_notifications_handler(
                         minute=minute,
                         notification_id=notification.id
                     )
+                    app_logger.info(f"Уведомление запланировано")
 
         await user_repo.toggle_user_notifications(message.from_user.id)
         profile_text = await ProfileUtils.get_profile_text(message, user_repo, notification_repo, progress_repo, course_repo)

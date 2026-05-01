@@ -12,6 +12,7 @@ from database.repositories.ProgressRepository import ProgressRepository
 from database.repositories.UserRepository import UserRepository
 from keyboards.ProfileKeyboards import profile_back_keyboard, change_notifications_keyboard, profile_keyboard
 from keyboards.RegisterKeyboards import get_skip_notifications_keyboard
+from logger_config import app_logger
 from services.Scheduler import message_scheduler
 from states.UserStates import UserStates
 from utils.ProfileUtils import ProfileUtils
@@ -111,10 +112,13 @@ async def change_notifications_handler(
         if notifications_times:
             user = await user_repo.get_by_telegram_id(message.from_user.id)
             await notification_repo.clear_all_user_notifications(user.id)
+            message_scheduler.remove_all_user_notifications(message.from_user.id)
+
             for time in notifications_times:
                 notification = await notification_repo.add_notification_from_string(message.from_user.id, time)
-
+                app_logger.info(f"Уведомление в БД: id={notification.id if notification else None}")
                 hour, minute = map(int, time.split(':'))
+                app_logger.info(f"Планируем уведомление для {message.from_user.id} на {hour}:{minute}")
                 message_scheduler.scheduler_daily_notification(
                     bot=message.bot,
                     telegram_id=message.from_user.id,

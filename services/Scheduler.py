@@ -85,6 +85,9 @@ class MessageScheduler:
         :return: True if task succesfully added/updated
         """
         try:
+            if not self.scheduler.running:
+                app_logger.warning("Планировщик не запущен, запускаем...")
+                self.scheduler.start()
             job_id = self._get_job_id(telegram_id, notification_id or 0)
             existing_job = self.scheduler.get_job(job_id)
             if existing_job:

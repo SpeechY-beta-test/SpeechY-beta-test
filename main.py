@@ -18,46 +18,41 @@ from logger_config import app_logger
 from services.Scheduler import message_scheduler
 
 
+def run_migrations():
+    """Запускает миграции Alembic перед стартом бота."""
+    try:
+        from alembic.config import Config
+        from alembic import command
+
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+        app_logger.info("✅ Миграции успешно применены")
+    except Exception as e:
+        app_logger.error(f"❌ Ошибка выполнения миграций: {e}")
+        raise
+
+
+async def seed_initial_data():
+    """Заполняет таблицы начальными данными (курсы, задания)."""
+    async with await db.get_session() as session:
+        from database.repositories.CourseRepository import CourseRepository
+        course_repo = CourseRepository(session)
+
+        # Проверяем, есть ли уже курсы
+        courses = await course_repo.get_all_available_courses()
+        if not courses:
+            app_logger.info("Заполнение таблиц первоначальными данными...")
+            data_seeder = DataSeeder(session)
+            await data_seeder.seed_all()
+            await session.commit()
+            app_logger.info("✅ Начальные данные добавлены")
+        else:
+            app_logger.info("Начальные данные уже есть, пропускаем")
+
+
 async def on_startup():
     """Запускается при старте бота."""
-    app_logger.info("Проверка структуры БД (миграции должны быть применены отдельно)")
-
-    from sqlalchemy import text
-    from database.base import Base
-
-    async with db.engine.begin() as conn:
-        result = await conn.execute(text(
-            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')"
-        ))
-        tables_exist = result.scalar()
-
-        if not tables_exist:
-            app_logger.info("Таблиц нет, создаем через create_all (первый запуск)")
-            await conn.run_sync(Base.metadata.create_all)
-
-            app_logger.info("Заполнение таблиц первоначальными данными")
-            async with await db.get_session() as session:
-                data_seeder = DataSeeder(session)
-                await data_seeder.seed_all()
-                await session.commit()
-        else:
-            app_logger.info("Таблицы существуют, пропускаем создание")
-
-    # Запускаем планировщик
-    message_scheduler.start()
-
-    # Восстанавливаем уведомления
-    async with await db.get_session() as session:
-        from database.repositories.NotificationRepository import NotificationRepository
-        from database.repositories.UserRepository import UserRepository
-
-        notification_repo = NotificationRepository(session)
-        user_repo = UserRepository(session)
-
-        # Нужно получить экземпляр бота - он будет передан через контекст
-        # Для этого лучше передать bot позже, либо сохранить в глобальную переменную
-        app_logger.info("База данных готова")
-        app_logger.info("Бот запущен")
+    app_logger.info("Бот запущен")
 
 
 async def on_shutdown():
@@ -70,6 +65,17 @@ async def on_shutdown():
 
 async def main():
     app_logger.info("Инициализация бота...")
+
+    # 1. Применяем миграции
+    run_migrations()
+
+    # 2. Заполняем начальными данными (если нужно)
+    await seed_initial_data()
+
+    # 3. Запускаем планировщик
+    message_scheduler.start()
+
+    # 4. Создаем бота
     BOT_TOKEN = settings.get_bot_token()
     bot = Bot(
         BOT_TOKEN,
@@ -82,7 +88,6 @@ async def main():
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 
-    # Добавляем бота в данные для возможности восстановления уведомлений
     dp["bot"] = bot
 
     dp.update.middleware(DbSessionMiddleware())
@@ -92,13 +97,13 @@ async def main():
     dp.include_routers(*routers)
 
     try:
+        # 5. Восстанавливаем уведомления
         async with await db.get_session() as session:
             from database.repositories.NotificationRepository import NotificationRepository
-
             notification_repo = NotificationRepository(session)
-
             await restore_all_notifications(bot, notification_repo)
 
+        # 6. Запускаем поллинг
         await dp.start_polling(
             bot,
             allowed_updates=dp.resolve_used_update_types()

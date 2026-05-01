@@ -18,20 +18,10 @@ from config import settings
 
 # ✅ КЛЮЧЕВОЙ МОМЕНТ: импортируем Base и ВСЕ модели
 from database.base import Base
+from database import models
 
-# ✅ ЯВНО импортируем все модели, чтобы они зарегистрировались в Base.metadata
-from database.models import (
-    User,
-    Notification,
-    Course,
-    CompletedTask,
-    Progress,
-    Task,
-    Condition,
-    UserAnchor
-)
 
-# this is the Alembic Config object
+
 config = context.config
 
 # Устанавливаем URL из настроек
@@ -44,6 +34,8 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # ✅ target_metadata должен указывать на Base.metadata
+print("DEBUG: Tables in Base.metadata:", list(Base.metadata.tables.keys()))
+print("DEBUG: Number of tables:", len(Base.metadata.tables))
 target_metadata = Base.metadata
 
 

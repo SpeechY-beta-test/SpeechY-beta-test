@@ -1,3 +1,4 @@
+# migrations/env.py
 import asyncio
 from logging.config import fileConfig
 from pathlib import Path
@@ -12,24 +13,37 @@ from alembic import context
 # Добавляем корень проекта в путь
 sys.path.append(str(Path(__file__).parent.parent))
 
-# Импортируем настройки и модели
+# ✅ ВАЖНО: импортируем настройки
 from config import settings
+
+# ✅ КЛЮЧЕВОЙ МОМЕНТ: импортируем Base и ВСЕ модели
 from database.base import Base
-from database.models import *  # noqa
+
+# ✅ ЯВНО импортируем все модели, чтобы они зарегистрировались в Base.metadata
+from database.models import (
+    User,
+    Notification,
+    Course,
+    CompletedTask,
+    Progress,
+    Task,
+    Condition,
+    UserAnchor
+)
 
 # this is the Alembic Config object
 config = context.config
 
-# ========== ПОДСТАВЛЯЕМ URL ИЗ НАСТРОЕК ==========
+# Устанавливаем URL из настроек
 database_url = settings.get_database_url()
 sync_url = database_url.replace("postgresql+asyncpg://", "postgresql://")
 config.set_main_option("sqlalchemy.url", sync_url)
-# =================================================
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# ✅ target_metadata должен указывать на Base.metadata
 target_metadata = Base.metadata
 
 
@@ -74,14 +88,11 @@ async def run_async_migrations() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    # ✅ Исправление: получаем существующий event loop, а не создаем новый
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
-        # Нет запущенного loop'а — создаем новый
         asyncio.run(run_async_migrations())
     else:
-        # Loop уже запущен — создаем задачу
         if loop.is_running():
             import nest_asyncio
             nest_asyncio.apply()

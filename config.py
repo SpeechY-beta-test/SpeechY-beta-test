@@ -26,11 +26,18 @@ class Settings(BaseSettings):
         app_logger.debug(f"Подключение к БД: {self.DB_USER}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}")
 
     def get_database_url(self) -> str:
-        if "postgresql://" in self.DATABASE_URL and "+asyncpg" not in self.DATABASE_URL:
-            return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-        url = f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
-        print(f"URL для подключения: {url}")  # временно для отладки
-        return url
+        # ✅ Если есть DATABASE_URL - используем
+        if self.DATABASE_URL:
+            # Преобразуем для asyncpg
+            url = self.DATABASE_URL
+            if "postgresql://" in url and "+asyncpg" not in url:
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return url
+
+        # ✅ Если нет DATABASE_URL, собираем из частей
+        if self.DB_HOST and self.DB_USER and self.DB_PASSWORD and self.DB_NAME:
+            port = self.DB_PORT or 5432
+            return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{port}/{self.DB_NAME}"
 
     def get_bot_token(self):
         return self.BOT_TOKEN

@@ -10,6 +10,7 @@ from database.repositories.ProgressRepository import ProgressRepository
 from database.repositories.TaskRepository import TaskRepository
 from database.repositories.UserRepository import UserRepository
 from keyboards.TaskKeyboards import retry_voice_message_keyboard, task_menu_keyboard, course_task_menu_keyboard
+from logger_config import app_logger
 from schemas.schemas import CourseName, StreakStatus
 from services.TaskService import task_handler_factory
 from states.TaskStates import TaskStates
@@ -59,6 +60,10 @@ async def handle_voice(
         state: FSMContext,
         anchor_manager: AnchorMessageManager
 ):
+    app_logger.info(
+        "Зашли в хендлер обработки голосовго сообщения"
+    )
+    print("Зашли в хендлер обработки голосовго сообщения")
     duration = message.voice.duration
     if 60 <= duration <= 180:
 

@@ -1,4 +1,3 @@
-# main.py
 import asyncio
 import sys
 
@@ -38,7 +37,6 @@ async def seed_initial_data():
         from database.repositories.CourseRepository import CourseRepository
         course_repo = CourseRepository(session)
 
-        # Проверяем, есть ли уже курсы
         courses = await course_repo.get_all_available_courses()
         if not courses:
             app_logger.info("Заполнение таблиц первоначальными данными...")
@@ -66,16 +64,12 @@ async def on_shutdown():
 async def main():
     app_logger.info("Инициализация бота...")
 
-    # 1. Применяем миграции
     run_migrations()
 
-    # 2. Заполняем начальными данными (если нужно)
     await seed_initial_data()
 
-    # 3. Запускаем планировщик
     message_scheduler.start()
 
-    # 4. Создаем бота
     BOT_TOKEN = settings.get_bot_token()
     bot = Bot(
         BOT_TOKEN,

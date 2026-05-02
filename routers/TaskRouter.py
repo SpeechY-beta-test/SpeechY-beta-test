@@ -72,6 +72,15 @@ async def handle_voice(
             reply_markup=retry_voice_message_keyboard().as_markup()
         )
         await anchor_manager.add_temp_message(message)
+    else:
+        data = await state.get_data()
+        await anchor_manager.edit_anchor(
+            "Голосовое слишком короткое!\n"
+            "Длина голосового сообщения должна быть в пределах от 1 до 3 минут"
+        )
+        formatted_message = data.get('formatted_message')
+        await anchor_manager.send_anchor(formatted_message)
+        await state.set_state(TaskStates.voice_message)
 
     await state.set_state(None)
 

@@ -89,6 +89,9 @@ class MessageScheduler:
                 app_logger.warning("Планировщик не запущен, запускаем...")
                 self.scheduler.start()
             job_id = self._get_job_id(telegram_id, notification_id or 0)
+
+            timezone = self.scheduler.timezone
+
             existing_job = self.scheduler.get_job(job_id)
             if existing_job:
                 app_logger.debug(
@@ -96,7 +99,7 @@ class MessageScheduler:
                 )
             self.scheduler.add_job(
                 func=self._send_notification,
-                trigger=CronTrigger(hour=hour, minute=minute),
+                trigger=CronTrigger(hour=hour, minute=minute, timezone=timezone),
                 args=[bot, telegram_id, message],
                 id=job_id,
                 replace_existing=True,

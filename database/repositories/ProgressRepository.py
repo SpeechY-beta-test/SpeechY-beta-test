@@ -89,4 +89,5 @@ class ProgressRepository:
         course_progress = result.scalar_one_or_none()
         course_progress.progress += exp
         await self.session.commit()
+        print("Прошли add_curse to user")
         return exp

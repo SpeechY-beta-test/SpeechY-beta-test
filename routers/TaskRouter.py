@@ -72,12 +72,21 @@ async def handle_voice(
             f"Голосовое получил!\nСохраняем его?",
             reply_markup=retry_voice_message_keyboard().as_markup()
         )
+        await anchor_manager.delete_all_temp_messages()
         await anchor_manager.add_temp_message(message)
+        await state.set_state(None)
+
     else:
-        await anchor_manager.edit_anchor(
-            f"сработало уловие"
+        data = await state.get_data()
+        msg = await message.answer(
+            f"Голосовое слишком короткое, тебе надо говорить минимум 60 секунд\n"
         )
-    await state.set_state(None)
+        await anchor_manager.add_temp_message(msg)
+        await anchor_manager.send_anchor(
+            data.get("formatted_message")
+        )
+        await anchor_manager.delete_user_message(message)
+        await state.set_state(TaskStates.voice_message)
 
 
 @task_router.callback_query(F.data == "retry_voice_message")
@@ -125,16 +134,19 @@ async def save_voice_message_handler(
         user_streak, status = await user_repo.update_user_amount_of_days_series(callback.from_user.id)
         print("user streak", user_streak, " status: ", status)
         user = await user_repo.get_by_telegram_id(callback.from_user.id)
+        print("После получения user")
         keyboard = course_task_menu_keyboard()
         exp = await progress_repo.add_course_progress_to_user(
             user.id,
             course_id
         )
+        print("После добавления прогресса пользователю")
         await completed_task_repo.add_completed_task_condition(
             telegram_id=callback.from_user.id,
             task_id=task_id,
             condition_id=condition_id
         )
+        print("Дошли до if else status: ", status)
         if (status == StreakStatus.ALREADY_COMPLETED) or (status == StreakStatus.FIRST_TASK):
             await anchor_manager.edit_anchor(
                 f"Упражнение засчитано!\n"

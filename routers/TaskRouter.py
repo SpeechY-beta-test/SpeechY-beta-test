@@ -65,6 +65,7 @@ async def handle_voice(
     )
     print("Зашли в хендлер обработки голосовго сообщения")
     duration = message.voice.duration
+    print("duration", duration)
     if 60 <= duration <= 180:
 
         await anchor_manager.send_anchor(
@@ -73,15 +74,9 @@ async def handle_voice(
         )
         await anchor_manager.add_temp_message(message)
     else:
-        data = await state.get_data()
         await anchor_manager.edit_anchor(
-            "Голосовое слишком короткое!\n"
-            "Длина голосового сообщения должна быть в пределах от 1 до 3 минут"
+            f"сработало уловие"
         )
-        formatted_message = data.get('formatted_message')
-        await anchor_manager.send_anchor(formatted_message)
-        await state.set_state(TaskStates.voice_message)
-
     await state.set_state(None)
 
 

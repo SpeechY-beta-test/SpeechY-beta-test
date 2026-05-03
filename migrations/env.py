@@ -86,9 +86,14 @@ def run_migrations_online() -> None:
         asyncio.run(run_async_migrations())
     else:
         if loop.is_running():
-            import nest_asyncio
-            nest_asyncio.apply()
-            loop.run_until_complete(run_async_migrations())
+            # Проверяем, есть ли nest_asyncio (только на Railway)
+            try:
+                import nest_asyncio
+                nest_asyncio.apply()
+                loop.run_until_complete(run_async_migrations())
+            except ImportError:
+                # nest_asyncio нет, создаем новый цикл
+                asyncio.run(run_async_migrations())
         else:
             asyncio.run(run_async_migrations())
 

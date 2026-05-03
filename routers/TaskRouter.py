@@ -65,6 +65,7 @@ async def handle_voice(
     )
     print("Зашли в хендлер обработки голосовго сообщения")
     duration = message.voice.duration
+    print("duration", duration)
     if 60 <= duration <= 180:
 
         await anchor_manager.send_anchor(
@@ -72,7 +73,10 @@ async def handle_voice(
             reply_markup=retry_voice_message_keyboard().as_markup()
         )
         await anchor_manager.add_temp_message(message)
-
+    else:
+        await anchor_manager.edit_anchor(
+            f"сработало уловие"
+        )
     await state.set_state(None)
 
 

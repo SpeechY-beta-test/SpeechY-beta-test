@@ -17,6 +17,10 @@ from logger_config import app_logger
 from services.Scheduler import message_scheduler
 
 
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
 def run_migrations():
     """Запускает миграции Alembic перед стартом бота."""
     try:

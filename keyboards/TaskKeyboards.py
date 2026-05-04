@@ -83,3 +83,20 @@ def back_to_profile_keyboard() -> InlineKeyboardBuilder:
 
     )
     return builder
+
+
+def confirm_retell_keyboard() -> InlineKeyboardBuilder:
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text="Готов!",
+            callback_data="confirm_retell",
+            style="success"
+        ),
+        InlineKeyboardButton(
+            text="Назад",
+            callback_data="complete_tasks",
+            style="primary"
+        )
+    )
+    return builder

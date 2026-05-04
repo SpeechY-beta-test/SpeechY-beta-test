@@ -9,9 +9,10 @@ from database.repositories.CourseRepository import CourseRepository
 from database.repositories.ProgressRepository import ProgressRepository
 from database.repositories.TaskRepository import TaskRepository
 from database.repositories.UserRepository import UserRepository
-from keyboards.TaskKeyboards import retry_voice_message_keyboard, task_menu_keyboard, course_task_menu_keyboard
+from keyboards.TaskKeyboards import retry_voice_message_keyboard, task_menu_keyboard, course_task_menu_keyboard, \
+    confirm_retell_keyboard
 from logger_config import app_logger
-from schemas.schemas import CourseName, StreakStatus
+from schemas.schemas import CourseName, StreakStatus, ImprovizationTaskName
 from services.TaskService import task_handler_factory
 from states.TaskStates import TaskStates
 from utils.TaskUtils import TaskUtils
@@ -82,11 +83,18 @@ async def handle_voice(
             f"Голосовое слишком короткое, тебе надо говорить минимум 60 секунд\n"
         )
         await anchor_manager.add_temp_message(msg)
-        await anchor_manager.send_anchor(
-            data.get("formatted_message")
-        )
+        if data.get("task_name") == ImprovizationTaskName.RETELL:
+            await anchor_manager.send_anchor(
+                data.get("formatted_message"),
+                reply_markup=confirm_retell_keyboard().as_markup()
+            )
+        else:
+            await anchor_manager.send_anchor(
+                data.get("formatted_message")
+            )
+            await state.set_state(TaskStates.voice_message)
         await anchor_manager.delete_user_message(message)
-        await state.set_state(TaskStates.voice_message)
+
 
 
 @task_router.callback_query(F.data == "retry_voice_message")
@@ -173,6 +181,19 @@ async def save_voice_message_handler(
         await anchor_manager.edit_anchor(
             str(e)
         )
+
+
+@task_router.callback_query(F.data == "confirm_retell")
+async def confirm_retell_handler(
+        callback: CallbackQuery,
+        anchor_manager: AnchorMessageManager,
+        state: FSMContext
+):
+    await anchor_manager.delete_all_temp_messages()
+    await anchor_manager.edit_anchor(
+        "Отлично! \nЖду твое голосовое сообщение!"
+    )
+    await state.set_state(TaskStates.voice_message)
 
 
 

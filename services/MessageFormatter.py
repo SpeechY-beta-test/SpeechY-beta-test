@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from database.models import Task, Condition
-from schemas.schemas import CourseName
+from schemas.schemas import CourseName, ImprovizationTaskName
 
 
 class MessageFormatter(ABC):
@@ -29,12 +29,21 @@ class ImprovizationFormatter(MessageFormatter):
             task: Task,
             condition: Condition
     ) -> str:
-        return (
-            f"🎭 Задание: <b><i>{task.name}</i></b>\n\n"
-            f"📋 <i>{task.rules}</i>\n\n"
-            f"🎲 Твое слово: <b>{condition.condition}</b>\n\n"
-            f"💡 Говори без остановки 60 секунд!"
-        )
+        if task.name == ImprovizationTaskName.DESCRIPTION_OF_THE_ITEM:
+            return (
+                f"🎭 Задание: <b><i>{task.name}</i></b>\n\n"
+                f"📋 <i>{task.rules}</i>\n\n"
+                f"🎲 Твое слово: <b>{condition.condition}</b>\n\n"
+                f"💡 Говори без остановки 60 секунд!"
+            )
+        elif task.name == ImprovizationTaskName.RETELL:
+            return (
+                f"🎭 Задание: <b><i>{task.name}</i></b>\n\n"
+                f"📋 <i>{task.rules}</i>\n\n"
+                f"🎲 Твой текст: <b>{condition.condition}</b>\n\n"
+                f"💡 Ты должен пересказать текст минимум за 1 минуту\n"
+                f"Как будешь готов нажми на кнопку ниже"
+            )
 
 
 class MessageFormatterFactory:

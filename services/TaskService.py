@@ -6,8 +6,8 @@ from database.repositories.ConditionRepository import ConditionRepository
 from database.repositories.ProgressRepository import ProgressRepository
 from database.repositories.TaskRepository import TaskRepository
 from database.repositories.UserRepository import UserRepository
-from keyboards.TaskKeyboards import back_to_profile_keyboard
-from schemas.schemas import CourseName, DifficultyLevel
+from keyboards.TaskKeyboards import back_to_profile_keyboard, confirm_retell_keyboard
+from schemas.schemas import CourseName, DifficultyLevel, ImprovizationTaskName
 from services.MessageFormatter import MessageFormatterFactory
 from states.TaskStates import TaskStates
 
@@ -65,9 +65,13 @@ async def task_handler_factory(
 
         formatter = MessageFormatterFactory.get_formatter(course_name)
         message = formatter.format_task_message(task, condition)
+        if task.name == ImprovizationTaskName.RETELL:
 
-        await anchor_manager.edit_anchor(message)
-
+            await anchor_manager.edit_anchor(message,
+                                             reply_markup=confirm_retell_keyboard().as_markup()
+                                             )
+        else:
+            await anchor_manager.edit_anchor(message)
         await state.update_data(
             task_id=task.id,
             task_name=task.name,

@@ -20,3 +20,7 @@ class StreakStatus(str, Enum):
     STREAK_BROKEN = "streak_broken"
 
 
+class ImprovizationTaskName(str, Enum):
+    DESCRIPTION_OF_THE_ITEM = "Описание предмета"
+    RETELL = "Пересказ"
+

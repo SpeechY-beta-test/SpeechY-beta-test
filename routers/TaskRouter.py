@@ -96,7 +96,6 @@ async def handle_voice(
         await anchor_manager.delete_user_message(message)
 
 
-
 @task_router.callback_query(F.data == "retry_voice_message")
 async def retry_voice_message_handler(
         callback: CallbackQuery,

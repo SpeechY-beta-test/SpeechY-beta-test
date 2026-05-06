@@ -5,6 +5,7 @@ from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from Managers.AnchorMessageManager import AnchorMessageManager
 from logger_config import app_logger
 
 
@@ -40,7 +41,8 @@ class MessageScheduler:
             self,
             bot: Bot,
             telegram_id: int,
-            message: str
+            message: str,
+            anchor_manager: AnchorMessageManager = None
     ) -> None:
         """
         Send notification to user
@@ -52,11 +54,13 @@ class MessageScheduler:
         """
 
         try:
-            await bot.send_message(
+            sent_msg = await bot.send_message(
                 chat_id=telegram_id,
                 text=message,
                 disable_notification=False
             )
+            if anchor_manager:
+                await anchor_manager.add_notification_message(sent_msg.message_id)
             app_logger.info(
                 f"[{datetime.now()}] Отправлено уведомление пользователю {telegram_id}"
             )
@@ -71,6 +75,7 @@ class MessageScheduler:
             telegram_id: int,
             hour: int,
             minute: int,
+            anchor_manager: AnchorMessageManager =None,
             notification_id: Optional[int] = None,
             message: str = "Пора тренировать речь!\nSpeechY соскучился...",
     ) -> bool:
@@ -80,6 +85,7 @@ class MessageScheduler:
         :param telegram_id:
         :param hour:
         :param minute:
+        :param anchor_manager:
         :param notification_id:
         :param message:
         :return: True if task succesfully added/updated
@@ -100,7 +106,7 @@ class MessageScheduler:
             self.scheduler.add_job(
                 func=self._send_notification,
                 trigger=CronTrigger(hour=hour, minute=minute, timezone=timezone),
-                args=[bot, telegram_id, message],
+                args=[bot, telegram_id, message, anchor_manager],
                 id=job_id,
                 replace_existing=True,
                 misfire_grace_time=300
@@ -110,6 +116,7 @@ class MessageScheduler:
             app_logger.info(
                 f"Запланировано уведомление {notif_info} для {telegram_id} на {hour:02d}:{minute:02d}"
             )
+            print(f"Запланировано уведомление {notif_info} для {telegram_id} на {hour:02d}:{minute:02d}")
             return True
         except Exception as e:
             app_logger.error(
@@ -192,8 +199,10 @@ class MessageScheduler:
         Start scheduler
         :return: None
         """
+
         if not self.scheduler.running:
             self.scheduler.start()
+            print("Планировщик уведомлений запущен")
             app_logger.info(
                 "Планировщик уведомлений запущен"
             )

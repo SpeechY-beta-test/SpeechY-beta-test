@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
@@ -24,8 +24,10 @@ task_router = Router()
 async def complete_tasks_handler(
         callback: CallbackQuery,
         course_repo: CourseRepository,
-        anchor_manager: AnchorMessageManager
+        anchor_manager: AnchorMessageManager,
+        bot: Bot
 ):
+    await anchor_manager.delete_all_notification_messages(bot, callback.message.chat.id)
     msg = await TaskUtils.get_all_available_tasks_message(course_repo)
     await anchor_manager.edit_anchor(
         msg,

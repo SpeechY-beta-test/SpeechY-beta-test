@@ -53,7 +53,6 @@ async def main():
 
     run_migrations()
 
-
     message_scheduler.start()
 
     BOT_TOKEN = settings.get_bot_token()

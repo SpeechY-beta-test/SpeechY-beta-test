@@ -35,23 +35,6 @@ def run_migrations():
         raise
 
 
-async def seed_initial_data():
-    """Заполняет таблицы начальными данными (курсы, задания)."""
-    async with await db.get_session() as session:
-        from database.repositories.CourseRepository import CourseRepository
-        course_repo = CourseRepository(session)
-
-        courses = await course_repo.get_all_available_courses()
-        if not courses:
-            app_logger.info("Заполнение таблиц первоначальными данными...")
-            data_seeder = DataSeeder(session)
-            await data_seeder.seed_all()
-            await session.commit()
-            app_logger.info("✅ Начальные данные добавлены")
-        else:
-            app_logger.info("Начальные данные уже есть, пропускаем")
-
-
 async def on_startup():
     """Запускается при старте бота."""
     app_logger.info("Бот запущен")
@@ -70,7 +53,6 @@ async def main():
 
     run_migrations()
 
-    await seed_initial_data()
 
     message_scheduler.start()
 

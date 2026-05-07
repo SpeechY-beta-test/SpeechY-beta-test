@@ -151,7 +151,8 @@ async def customization_notifications_handler(
                         telegram_id=message.from_user.id,
                         hour=hour,
                         minute=minute,
-                        notification_id=notification.id
+                        notification_id=notification.id,
+                        anchor_manager=anchor_msg_manager
                     )
                     app_logger.info(f"Уведомление запланировано")
 

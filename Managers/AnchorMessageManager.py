@@ -29,6 +29,7 @@ class AnchorMessageManager:
         self.anchor_repo = AnchorRepository(session)
 
         self._temp_messages: List[int] =[]
+        self.notification_message_ids: List[int] = []
 
     async def get_anchor_id(self) -> Optional[int]:
         anchor = await self.anchor_repo.get_anchor(self.user_id)
@@ -145,12 +146,21 @@ class AnchorMessageManager:
             state=state
         )
 
+    async def _get_notification_key(self) -> str:
+        return f"notification_messages_{self.user_id}_{self.chat_id}"
+
     async def _get_temp_key(self) -> str:
         """
         :return:
         Ключ для хранения temp сообщений в FSM
         """
         return f"temp_messages_{self.user_id}_{self.chat_id}"
+
+    async def get_notification_messages(self) -> List[int]:
+        if self.state:
+            data = await self.state.get_data()
+            return data.get('notification_messages', [])
+        return []
 
     async def get_temp_messages(self) -> List[int]:
         """
@@ -162,11 +172,21 @@ class AnchorMessageManager:
             return data.get('temp_messages', [])
         return self._temp_messages
 
+    async def save_notification_messages(self, messages: List[int]):
+        if self.state:
+            await self.state.update_data(notification_messages=messages)
+
     async def save_temp_messages(self, messages: List[int]):
         if self.state:
             await self.state.update_data(temp_messages=messages)
         else:
             self._temp_messages = messages
+
+    async def add_notification_message(self, message_id: int):
+        messages = await self.get_notification_messages()
+        messages.append(message_id)
+        await self.save_notification_messages(messages)
+        app_logger.debug(f"Добавлено уведомление {message_id}, всего: {len(messages)}")
 
     async def add_temp_message(self, message: Message):
         if message and message.message_id:
@@ -175,6 +195,21 @@ class AnchorMessageManager:
             await self.save_temp_messages(temp_messages)
             app_logger.debug(f"Добавлено temp сообщение {message.message_id}, всего: {len(temp_messages)}")
             print(f"Temp после добавления: {temp_messages}")
+
+    async def delete_all_notification_messages(self, bot: Bot, chat_id: int) -> int:
+        messages = await self.get_notification_messages()
+        if not messages:
+            return 0
+        deleted_count = 0
+        for msg_id in messages:
+            try:
+                await bot.delete_message(chat_id, msg_id)
+                deleted_count += 1
+            except Exception as e:
+                app_logger.debug(f"Не удалось удалить {msg_id}: {e}")
+        await self.save_notification_messages([])
+        app_logger.debug(f"Удалено {deleted_count} сообщений")
+        return deleted_count
 
     async def add_temp_messages(self, messages: List[Message]) -> None:
         for msg in messages:
@@ -221,6 +256,8 @@ class AnchorMessageManager:
 
     async def get_temp_messages_count(self) -> int:
         return len(await self.get_temp_messages())
+
+
 
 
 
